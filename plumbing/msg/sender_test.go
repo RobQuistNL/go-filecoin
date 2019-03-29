@@ -6,10 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
 	"github.com/filecoin-project/go-filecoin/actor"
 	"github.com/filecoin-project/go-filecoin/actor/builtin/account"
 	"github.com/filecoin-project/go-filecoin/actor/builtin/storagemarket"
@@ -20,6 +16,10 @@ import (
 	"github.com/filecoin-project/go-filecoin/testhelpers"
 	"github.com/filecoin-project/go-filecoin/types"
 	"github.com/filecoin-project/go-filecoin/wallet"
+	hamt "github.com/ipfs/go-hamt-ipld"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSend(t *testing.T) {
@@ -29,14 +29,14 @@ func TestSend(t *testing.T) {
 		assert := assert.New(t)
 		require := require.New(t)
 
-		w, chainStore := setupSendTest(require)
+		w, chainStore, cst := setupSendTest(require)
 		addr := w.Addresses()[0]
 		timer := testhelpers.NewTestBlockTimer(1000)
 		queue := core.NewMessageQueue()
 		pool := core.NewMessagePool(timer)
 		nopPublish := func(string, []byte) error { return nil }
 
-		s := NewSender(w, chainStore, timer, queue, pool, nullValidator{rejectMessages: true}, nopPublish)
+		s := NewSender(w, chainStore, cst, timer, queue, pool, nullValidator{rejectMessages: true}, nopPublish)
 		_, err := s.Send(context.Background(), addr, addr, types.NewAttoFILFromFIL(2), types.NewGasPrice(0), types.NewGasUnits(0), "")
 		assert.Errorf(err, "for testing")
 	})
@@ -45,7 +45,7 @@ func TestSend(t *testing.T) {
 		assert := assert.New(t)
 		require := require.New(t)
 
-		w, chainStore := setupSendTest(require)
+		w, chainStore, cst := setupSendTest(require)
 		addr := w.Addresses()[0]
 		timer := testhelpers.NewTestBlockTimer(1000)
 		queue := core.NewMessageQueue()
@@ -58,7 +58,7 @@ func TestSend(t *testing.T) {
 			return nil
 		}
 
-		s := NewSender(w, chainStore, timer, queue, pool, nullValidator{}, publish)
+		s := NewSender(w, chainStore, cst, timer, queue, pool, nullValidator{}, publish)
 		require.Empty(queue.List(addr))
 		require.Empty(pool.Pending())
 
@@ -74,14 +74,14 @@ func TestSend(t *testing.T) {
 		require := require.New(t)
 		ctx := context.Background()
 
-		w, chainStore := setupSendTest(require)
+		w, chainStore, cst := setupSendTest(require)
 		addr := w.Addresses()[0]
 		timer := testhelpers.NewTestBlockTimer(1000)
 		queue := core.NewMessageQueue()
 		pool := core.NewMessagePool(timer)
 		nopPublish := func(string, []byte) error { return nil }
 
-		s := NewSender(w, chainStore, timer, queue, pool, nullValidator{}, nopPublish)
+		s := NewSender(w, chainStore, cst, timer, queue, pool, nullValidator{}, nopPublish)
 
 		var wg sync.WaitGroup
 		addTwentyMessages := func(batch int) {
@@ -183,7 +183,7 @@ func (v nullValidator) Validate(ctx context.Context, msg *types.SignedMessage, f
 	return nil
 }
 
-func setupSendTest(require *require.Assertions) (*wallet.Wallet, *chain.DefaultStore) {
+func setupSendTest(require *require.Assertions) (*wallet.Wallet, *chain.DefaultStore, *hamt.CborIpldStore) {
 	// Install an account actor in the genesis block.
 	ki := types.MustGenerateKeyInfo(1, types.GenerateKeyInfoSeed())[0]
 	addr, err := ki.Address()
@@ -197,5 +197,5 @@ func setupSendTest(require *require.Assertions) (*wallet.Wallet, *chain.DefaultS
 	// Install the key in the wallet for use in signing.
 	err = d.wallet.Backends(wallet.DSBackendType)[0].(*wallet.DSBackend).ImportKey(&ki)
 	require.NoError(err)
-	return d.wallet, d.chainStore
+	return d.wallet, d.chainStore, d.cst
 }

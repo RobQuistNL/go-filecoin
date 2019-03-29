@@ -14,9 +14,7 @@ import (
 	logging "github.com/ipfs/go-log"
 	"github.com/pkg/errors"
 
-	"github.com/filecoin-project/go-filecoin/actor/builtin"
 	"github.com/filecoin-project/go-filecoin/repo"
-	"github.com/filecoin-project/go-filecoin/state"
 	"github.com/filecoin-project/go-filecoin/types"
 )
 
@@ -372,16 +370,6 @@ func (store *DefaultStore) GetHead() types.SortedCidSet {
 // the number of "null blocks" that occur when a mining round fails to produce a block.
 func (store *DefaultStore) BlockHeight() (uint64, error) {
 	return store.head.Height()
-}
-
-// LatestState returns the state associated with the latest chain head.
-func (store *DefaultStore) LatestState(ctx context.Context) (state.Tree, error) {
-	h := store.GetHead()
-	tsas, err := store.GetTipSetAndState(ctx, h)
-	if err != nil {
-		return nil, err
-	}
-	return state.LoadStateTree(ctx, store.stateStore, tsas.TipSetStateRoot, builtin.Actors)
 }
 
 // BlockHistory returns a channel of block pointers (or errors), starting with the input tipset

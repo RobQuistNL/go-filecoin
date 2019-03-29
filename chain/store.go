@@ -7,7 +7,6 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
 
-	"github.com/filecoin-project/go-filecoin/state"
 	"github.com/filecoin-project/go-filecoin/types"
 )
 
@@ -37,8 +36,6 @@ type ReadStore interface {
 	HeadEvents() *pubsub.PubSub
 	// GetHead returns the head of the chain tracked by the store.
 	GetHead() types.SortedCidSet
-	// LatestState returns the latest state of the head
-	LatestState(ctx context.Context) (state.Tree, error)
 
 	BlockHistory(ctx context.Context, tips types.TipSet) <-chan interface{}
 
