@@ -372,33 +372,38 @@ func (store *DefaultStore) BlockHeight() (uint64, error) {
 	return store.head.Height()
 }
 
+type BlockHistoryResult struct {
+	TipSet types.TipSet
+	Error  error
+}
+
 // BlockHistory returns a channel of block pointers (or errors), starting with the input tipset
 // followed by each subsequent parent and ending with the genesis block, after which the channel
 // is closed. If an error is encountered while fetching a block, the error is sent, and the channel is closed.
-func (store *DefaultStore) BlockHistory(ctx context.Context, start types.TipSet) <-chan interface{} {
+func (store *DefaultStore) BlockHistory(ctx context.Context, start types.TipSet) <-chan *BlockHistoryResult {
 	ctx = logStore.Start(ctx, "BlockHistory")
-	out := make(chan interface{})
+	out := make(chan *BlockHistoryResult)
 
 	go func() {
 		defer close(out)
 		defer logStore.Finish(ctx)
 		err := store.walkChain(ctx, start.ToSlice(), func(tips []*types.Block) (cont bool, err error) {
-			var raw interface{}
-			raw, err = types.NewTipSet(tips...)
+			ts, err := types.NewTipSet(tips...)
 			if err != nil {
-				raw = err
+				out <- &BlockHistoryResult{Error: err}
+				return true, nil
 			}
 			select {
 			case <-ctx.Done():
 				return false, nil
-			case out <- raw:
+			case out <- &BlockHistoryResult{TipSet: ts}:
 			}
 			return true, nil
 		})
 		if err != nil {
 			select {
 			case <-ctx.Done():
-			case out <- err:
+			case out <- &BlockHistoryResult{Error: err}:
 			}
 		}
 	}()

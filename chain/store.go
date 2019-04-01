@@ -37,7 +37,7 @@ type ReadStore interface {
 	// GetHead returns the head of the chain tracked by the store.
 	GetHead() types.SortedCidSet
 
-	BlockHistory(ctx context.Context, tips types.TipSet) <-chan interface{}
+	BlockHistory(ctx context.Context, tips types.TipSet) <-chan *BlockHistoryResult
 
 	GenesisCid() cid.Cid
 }
