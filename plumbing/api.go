@@ -16,7 +16,6 @@ import (
 
 	"github.com/filecoin-project/go-filecoin/actor"
 	"github.com/filecoin-project/go-filecoin/address"
-	"github.com/filecoin-project/go-filecoin/chain"
 	"github.com/filecoin-project/go-filecoin/core"
 	"github.com/filecoin-project/go-filecoin/exec"
 	"github.com/filecoin-project/go-filecoin/net"
@@ -133,7 +132,7 @@ func (api *API) ChainHead(ctx context.Context) types.TipSet {
 }
 
 // ChainLs returns a channel of tipsets from head to genesis
-func (api *API) ChainLs(ctx context.Context) <-chan *chain.BlockHistoryResult {
+func (api *API) ChainLs(ctx context.Context) <-chan *chn.ChainLsResult {
 	return api.chain.Ls(ctx)
 }
 
