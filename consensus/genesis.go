@@ -197,7 +197,7 @@ func SetupDefaultActors(ctx context.Context, st state.Tree, storageMap vm.Storag
 	if err != nil {
 		return err
 	}
-	err = (&storagemarket.Actor{}).InitializeState(storageMap.NewStorage(address.StorageMarketAddress, stAct), nil)
+	err = (&storagemarket.Actor{}).InitializeState(storageMap.NewStorage(address.StorageMarketAddress, stAct), uint64(128823))
 	if err != nil {
 		return err
 	}

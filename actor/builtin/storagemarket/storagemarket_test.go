@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/filecoin-project/go-filecoin/abi"
 	"github.com/filecoin-project/go-filecoin/actor"
 	"github.com/filecoin-project/go-filecoin/actor/builtin"
 	"github.com/filecoin-project/go-filecoin/actor/builtin/miner"
@@ -144,6 +145,29 @@ func TestMinimumCollateral(t *testing.T) {
 	numSectors := big.NewInt(25000)
 	expected := types.NewAttoFILFromFIL(25)
 	assert.Equal(MinimumCollateral(numSectors), expected)
+}
+
+func TestSectorSize(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	st, vms := core.CreateStorages(ctx, t)
+	msg := types.NewMessage(address.TestAddress, address.StorageMarketAddress, 0, types.NewAttoFILFromFIL(14), "getSectorSize", []byte{})
+	result, err := th.ApplyTestMessage(st, vms, msg, types.NewBlockHeight(0))
+
+	assert.NoError(err)
+	assert.NoError(result.ExecutionError)
+
+	sectorSizeVal, err := abi.Deserialize(result.Receipt.Return[0], abi.SectorID)
+	require.NoError(err)
+
+	sectorSize, ok := sectorSizeVal.Val.(uint64)
+	require.True(ok)
+
+	assert.Equal(uint64(128823), sectorSize)
 }
 
 // this is used to simulate an attack where someone derives the likely address of another miner's
