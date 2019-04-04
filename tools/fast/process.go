@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 
 	logging "github.com/ipfs/go-log"
 	iptb "github.com/ipfs/iptb/testbed"
@@ -209,6 +210,11 @@ func (f *Filecoin) RunCmdJSONWithStdin(ctx context.Context, stdin io.Reader, v i
 	// check command exit code
 	if out.ExitCode() > 0 {
 		return fmt.Errorf("filecoin command: %s, exited with non-zero exitcode: %d", out.Args(), out.ExitCode())
+	}
+
+	if args[1] == "message" && args[2] == "wait" {
+		res, _ := ioutil.ReadAll(out.Stdout())
+		panic(res)
 	}
 
 	dec := json.NewDecoder(out.Stdout())

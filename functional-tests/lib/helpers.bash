@@ -208,7 +208,15 @@ function miner_update_pid {
 }
 
 function message_wait {
-    ./go-filecoin message wait $1 --repodir=$2
+    echo "ABCDEFGHI"
+    echo "ABCDEFGHI"
+    echo "ABCDEFGHI"
+    echo "ABCDEFGHI"
+    ./go-filecoin message wait $1 --repodir=$2 --enc=json | hexdump -C
+    echo "ABCDEFGHI"
+    echo "ABCDEFGHI"
+    echo "ABCDEFGHI"
+    echo "ABCDEFGHI"
 }
 
 function fork_message_wait {
